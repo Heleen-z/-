@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>检测系统</title>
+<style>
+body{margin:0;padding:100px 20px;background:#667eea;font-family:Arial}
+.container{max-width:900px;margin:0 auto;background:white;padding:30px;border-radius:15px}
+.upload-area{border:3px dashed #3498db;padding:50px;text-align:center;cursor:pointer;margin:20px0}
+.upload-area:hover{background:#f0f8ff}
+#loading{display:none;text-align:center;margin:30px0}
+#error{color:red;display:none}
+.result-section{display:none;margin-top:20px}
+button{background:#3498db;color:white;border:none;padding:12px30px;border-radius:5px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>金属缺陷检测系统</h1>
+<div class="upload-area" onclick="uploadClick()">
+<p>点击上传图像</p>
+</div>
+<input type="file" id="fileInput" style="display:none" accept="image/*">
+<div id="loading">正在分析...</div>
+<div id="error"></div>
+<div id="resultSection" class="result-section">
+<h3>检测结果</h3>
+<p id="resultText"></p>
+</div>
+</div>
+
+<script>
+function uploadClick(){
+document.getElementById('fileInput').click();
+}
+
+document.getElementById('fileInput').addEventListener('change',function(e){
+const file=e.target.files[0];
+if(file){
+console.log('选中文件:'+file.name);
+uploadFile(file);
+}
+});
+
+function uploadFile(file){
+document.getElementById('loading').style.display='block';
+document.getElementById('error').style.display='none';
+
+const formData=new FormData();
+formData.append('file',file);
+
+fetch('/upload',{method:'POST',body:formData})
+.then(r=>r.json())
+.then(data=>{
+document.getElementById('loading').style.display='none';
+if(data.error){
+document.getElementById('error').textContent=data.error;
+document.getElementById('error').style.display='block';
+}else{
+document.getElementById('resultText').textContent=
+'类别:'+data.class+',置信度:'+(data.confidence*100).toFixed(1)+'%';
+document.getElementById('resultSection').style.display='block';
+}
+})
+.catch(err=>{
+document.getElementById('loading').style.display='none';
+document.getElementById('error').textContent='上传失败:'+err.message;
+document.getElementById('error').style.display='block';
+});
+}
+</script>
+</body>
+</html>
