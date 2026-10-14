@@ -1,0 +1,26 @@
+---
+description: AI Portal LOG 九字段接入规范、显示名称映射及事件上传约定
+alwaysApply: false
+---
+
+# AI Portal LOG 接入
+
+- 面向公司共用 LOG 列表，完整规范见 `LOG_UPLOAD_RULES_ZH.md`。
+- 目标站点为 `https://faurecia.sharepoint.com/sites/AIPortal`，列表名称 LOG；通过受控配置维护目标。
+- 使用现有九个业务列：工具名称、EventId、ToolId、FeatureName、UserId、Status、Duration、TimeStamp、AppVersion。
+- 首次接入读取字段 Title、InternalName、EntityPropertyName、TypeAsString、Required 和唯一约束；选择列同时读取 Choices。
+- 默认“标题”改名为“工具名称”后，其上传属性为 Title。Title 的值是工具显示名称。
+- 其余预期上传键为 EventId、ToolId、FeatureName、UserId、Status、Duration、TimeStamp、AppVersion；以实际 EntityPropertyName 核对映射。
+- 保持现有列表定义，程序适配实际内部名、选项和约束，不自行更改列表。
+- 每条事件提供九个业务字段。Status 使用现有 Choices 的准确值，业务结果与上传传输状态分别管理。
+- ToolId 是全公司固定的软件代码；FeatureName 是稳定功能代码，二者共同识别功能。
+- UserId 使用实际操作人的公司 UPN/登录账号；Windows 回退使用 DOMAIN\username。代理上传仍保留原操作人。
+- 无人值守任务使用明确的服务身份；缺失用户身份不伪造员工账号，保留待补充事件。
+- EventId 在操作开始时生成 UUID；重试、通道切换、补传复用，新的执行生成新编号。
+- 只有实际确认服务器写入或查证同一事件存在后，才标记上传完成。根据实际唯一约束设计去重，不能仅因存在 EventId 就假定并发防重。
+- Duration 是非负有限 JSON 数字，单位秒；使用单调时钟计时，排除上传排队和重试时间。
+- TimeStamp 是操作终态的 UTC ISO 8601 时间，AppVersion 是该次实际执行程序的版本字符串，所有终态均采集。
+- 本地事件冻结原始时间、身份、版本与结果，补传原样使用。
+- 系统列 ID、Created、Modified、Author、Editor 交由 SharePoint 管理。
+- 沿用 odata=verbose 时，动态读取 ListItemEntityTypeFullName 添加 __metadata.type；它属于协议元数据。
+- 本文是上传契约，代码实施与线上接入验证应分别确认，不将文档完成表述为程序已接通。
